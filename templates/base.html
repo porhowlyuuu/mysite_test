@@ -1,0 +1,191 @@
+{% load static%}
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>{{info.theme}}</title>
+    <link rel="stylesheet" href="{% static 'vendor/simple-line-icons/css/simple-line-icons.css'%}">
+    <link rel="stylesheet" href="{% static 'vendor/font-awesome/css/fontawesome-all.min.css'%}">
+    <link rel="stylesheet" href="{% static 'css/styles.css'%}">
+    <script src="{% static 'vendor/jquery/jquery.min.js' %}"></script>
+    <script src="{% static 'vendor/popper.js/popper.min.js'%}"></script>
+    <script src="{% static 'vendor/bootstrap/js/bootstrap.min.js'%}"></script>
+    <script src="{% static 'vendor/echarts-all.js'%}"></script>
+    <script src="{% static 'js/carbon.js'%}"></script>
+    <script src="{% static 'js/jsplumb.min.js'%}"></script>
+    <script src="{% static 'js/jquerysession.js'%}"></script>
+</head>
+
+<body class="sidebar-fixed header-fixed">
+    <div class="">
+        <nav class="navbar page-header">
+            <a href="#" class="btn btn-link sidebar-mobile-toggle d-md-none mr-auto">
+                <i class="fa fa-bars"></i>
+            </a>
+
+            <a class="navbar-brand" href="#">
+                <strong>{{info.theme}}</strong>
+            </a>
+
+            <a href="#" class="btn btn-link sidebar-toggle d-md-down-none">
+                <i class="fa fa-bars"></i>
+            </a>
+            <ul class="navbar-nav ml-auto">
+
+                <button class="btn btn-rounded btn-primary" onclick="connect2SQL()" id="connect">未连接数据库</button>
+
+                <li class="nav-item dropdown">
+
+                    <select id="setDatabase" onchange="getDatabase()"
+                        class=" ml-1 d-md-down-none btn btn-rounded btn-danger">
+
+                    </select>
+    </div>
+    </li>
+
+
+
+
+    </ul>
+
+    </nav>
+
+    <div class="main-container">
+        <div class="sidebar">
+            <nav class="sidebar-nav">
+                <ul class="nav">
+                    <li class="nav-title">{{info.top}}</li>
+
+
+                    {% for i in info.messages%}
+
+                    <li class="nav-item">
+                        <a href="javascript:void(0);" onclick="setContent('{{i.url}}')" class="nav-link">
+                            {{i.name}}
+                        </a>
+                    </li>
+                    {% endfor%}
+
+                    <li class="nav-item nav-dropdown">
+                        <a href="#" class="nav-link nav-dropdown-toggle">
+                            <i class="icon icon-target"></i> Layouts <i class="fa fa-caret-left"></i>
+                        </a>
+
+                        <ul class="nav-dropdown-items">
+                            <li class="nav-item">
+                                <a href="layouts-normal.html" class="nav-link">
+                                    <i class="icon icon-target"></i> Normal
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="layouts-fixed-sidebar.html" class="nav-link">
+                                    <i class="icon icon-target"></i> Fixed Sidebar
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="layouts-fixed-header.html" class="nav-link">
+                                    <i class="icon icon-target"></i> Fixed Header
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="layouts-hidden-sidebar.html" class="nav-link">
+                                    <i class="icon icon-target"></i> Hidden Sidebar
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+
+                </ul>
+            </nav>
+        </div>
+
+
+        <div class="content" id="content">
+
+
+            {% block content%} {% endblock %}
+
+        </div>
+    </div>
+    </div>
+
+    <script>
+        database=""
+        function getDatabase() {
+            database = $("#setDatabase").val();
+        }
+        function setContent(url){
+            
+            $.ajax({
+                            url: url,
+                            type: "GET",
+                            success: function (resp) {
+                                $("#content").html(resp);
+                            },
+                            error:function(er){
+                                alert("页面加载失败！！")
+                            }
+            })
+        }
+
+        function connect2SQL() {
+            connect=$("#connect");
+            if (database ==null || database==""){
+                connect.removeClass("btn-success")
+                connect.html("未连接数据库")
+                alert("请选择数据库");
+                return;
+            }
+            
+            connect.html("正在连接数据库："+database+"中......")
+            $.ajax({
+                url: '{{info.connect2SQL_url | safe}}',
+                type: "GET",
+                data: {
+                    "database": database
+                },
+                success: function (resp) {
+                    resp=JSON.parse(resp);
+                    if (resp.res){
+                        connect.addClass("btn-success")
+                        connect.html("已连接数据库："+database);
+
+
+                    }else{
+                        connect.removeClass("btn-success")
+                        connect.html("未连接数据库") 
+                       alert("连接失败！");
+                       
+                    }
+                },
+                error: function (er) {
+                    connect.removeClass("btn-success")
+                    alert("连接失败！") 
+                    console.log("ERRRRRR:", er)
+                }
+
+            })
+        }
+
+        $(function () {
+            //Django标签，注意html代码格式化  ->  花括号错误
+            dataBases = {{info.dataBases | safe}}
+            cs = "<option value=''>选择连接的数据库</option>"
+            dataBases.forEach(database => {
+                cs += "<option value='" + database + "'>" + database + "</option>"
+            });
+            $("#setDatabase").html(cs);
+
+        })
+    </script>
+</body>
+
+</html>
